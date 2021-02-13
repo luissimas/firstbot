@@ -64,7 +64,7 @@ def getUpdates():
         response = session.get(url, params=parameters)
         data = json.loads(response.text)['result']
 
-        print(json.dumps(data, indent=4, sort_keys=True))
+        #print(json.dumps(data, indent=4, sort_keys=True))
 
         return data
 
@@ -115,8 +115,6 @@ def listen():
                 command = text.pop(0)
                 command += text.pop(0)
 
-                print(command)
-
                 message = ''
 
                 for word in text:
@@ -137,7 +135,8 @@ def listen():
 
                 elif command == '!wiki':
                     wikiInfo = scraper.scrapePage(message)
-                    sendMessage(answerID, wikiInfo.content)
+                    messageText = wikiInfo.content + '\n\nPara saber mais acesse: ' + wikiInfo.url
+                    sendMessage(answerID, messageText)
 
                 elif command == '!fazoq':
                     sendMessage(answerID, 'Como cu de curioso :)')
@@ -153,6 +152,11 @@ def listen():
                     sendMessage(answerID, 'Foi mal, não consegui entender o commando que você digitou :/')
 
                 prevMsg = lastMsg
+
+                # Register command in log file
+                file = open('log.txt', 'at')
+                file.write(lastMsg['message']['from']['first_name'] + ' -> ' + command + ' ' + message + '\n')
+                file.close()
 
         time.sleep(5)
 

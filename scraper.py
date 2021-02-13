@@ -2,7 +2,8 @@ from selenium import webdriver
 import re
 
 class Result:
-    def __init__(self, title, content):
+    def __init__(self, url, title, content):
+        self.url = url
         self.title = title
         self.content = content
 
@@ -22,9 +23,10 @@ def scrapePage(query):
     searchButton = driver.find_element_by_xpath('/html/body/div[5]/div[1]/div[2]/div/form/div/input[4]')
     searchButton.click()
 
+    resultUrl = driver.current_url
     resultTitle = driver.find_element_by_xpath('/html/body/div[3]/h1').text
     resultContent = re.sub(r'\[.*?\]', "", driver.find_element_by_xpath('/html/body/div[3]/div[3]/div[5]/div[1]/p[1]').text)
 
     driver.close()
 
-    return Result(resultTitle, resultContent)
+    return Result(resultUrl, resultTitle, resultContent)
