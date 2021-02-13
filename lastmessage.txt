@@ -1,0 +1,1 @@
+{"update_id": 43836760, "message": {"message_id": 142, "from": {"id": 1567935039, "is_bot": false, "first_name": "Luis", "username": "padacool", "language_code": "en"}, "chat": {"id": -563780415, "title": "testebot", "type": "group", "all_members_are_administrators": true}, "date": 1613227804, "text": "quit"}}
