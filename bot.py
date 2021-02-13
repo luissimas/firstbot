@@ -6,6 +6,7 @@ import time
 import nltk
 
 import cryptoquery
+import scraper
 import config
 
 from requests.sessions import session
@@ -52,13 +53,18 @@ def sendMessage(chatId, message):
 def getUpdates():
     url = 'https://api.telegram.org/bot' + botToken + '/getUpdates'
 
+    parameters={
+        'limit': '1',
+        'offset': '-1'
+    }
+
     session = Session()
 
     try:
-        response = session.get(url)
+        response = session.get(url, params=parameters)
         data = json.loads(response.text)['result']
 
-        #print(json.dumps(data, indent=4, sort_keys=True))
+        print(json.dumps(data, indent=4, sort_keys=True))
 
         return data
 
@@ -87,7 +93,7 @@ def getChat():
 
 def listen():
 
-    sendMessage('-563780415', 'Comecei a ouvir as mensagens do grupo...\nPara interagir comigo digite um comando seguido do texto desejado\nCommandos possíveis: repete, bitcoin,  fazoq\nConsigo perceber updates de 5 em 5 segundos porque meu dev é preguiçoso e burro por enquanto...')
+    sendMessage('-563780415', 'Comecei a ouvir as mensagens do grupo...\nPara interagir comigo digite um comando seguido do texto desejado\nCommandos possíveis: !repete, !bitcoin, !fazoq, !wiki\nConsigo perceber updates de 5 em 5 segundos porque meu dev é preguiçoso e burro por enquanto...')
 
     file = open('lastmessage.txt', 'rt')
     prevMsg = json.loads(file.read())
@@ -104,34 +110,49 @@ def listen():
         if  (lastMsg != prevMsg):
             answerID = lastMsg['message']['chat']['id']
             text = nltk.word_tokenize(lastMsg['message']['text'])
-            command = text.pop(0)
 
-            message = ''
+            if (len(text) >= 2) and str(text[0]) == '!':
+                command = text.pop(0)
+                command += text.pop(0)
 
-            for word in text:
-                message += str(word) + ' '
+                print(command)
 
-            if command == 'repete':
-                sendMessage(answerID, message)
-            elif command == 'bitcoin':
-                coins = cryptoquery.getCryptoInfo()
-                messageText = 'Consegui as seguintes informações: \n'
+                message = ''
 
-                for coin in coins:
-                    messageText += coin.name + '(' + coin.symbol + '): R${0:.2f}'.format(coin.price) + '\n'
-                sendMessage(answerID, messageText)
-            elif command == 'fazoq':
-                sendMessage(answerID, 'Como cu de curioso :)')
-            elif command == 'quit':
-                sendMessage(answerID, 'Ok, até a próxima!')
-                file = open('lastmessage.txt', 'wt')
-                file.write(json.dumps(lastMsg))
-                file.close()
-                return
-            elif prevMsg != '':
-                sendMessage(answerID, 'Foi mal, não consegui entender o commando que você digitou :/')
+                for word in text:
+                    message += str(word) + ' '
 
-            prevMsg = lastMsg
+                if command == '!repete':
+                    sendMessage(answerID, message)
+
+                elif command == '!bitcoin':
+                    coins = cryptoquery.getCryptoInfo()
+
+                    messageText = 'Consegui as seguintes informações: \n'
+
+                    for coin in coins:
+                        messageText += coin.name + '(' + coin.symbol + '): R${0:.2f}'.format(coin.price) + '\n'
+
+                    sendMessage(answerID, messageText)
+
+                elif command == '!wiki':
+                    wikiInfo = scraper.scrapePage(message)
+                    sendMessage(answerID, wikiInfo.content)
+
+                elif command == '!fazoq':
+                    sendMessage(answerID, 'Como cu de curioso :)')
+
+                elif command == '!quit':
+                    sendMessage(answerID, 'Ok, até a próxima!')
+                    file = open('lastmessage.txt', 'wt')
+                    file.write(json.dumps(lastMsg))
+                    file.close()
+                    return
+
+                elif prevMsg != '':
+                    sendMessage(answerID, 'Foi mal, não consegui entender o commando que você digitou :/')
+
+                prevMsg = lastMsg
 
         time.sleep(5)
 
