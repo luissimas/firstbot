@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 import re
 
 class Result:
@@ -17,17 +18,25 @@ def scrapePage(query):
 
     driver.get('https://pt.wikipedia.org/wiki/Wikipédia:Página_principal')
 
+    try:
+        searchBox = driver.find_element_by_xpath('/html/body/div[5]/div[1]/div[2]/div/form/div/input[1]')
+        searchBox.send_keys(query)
 
-    searchBox = driver.find_element_by_xpath('/html/body/div[5]/div[1]/div[2]/div/form/div/input[1]')
-    searchBox.send_keys(query)
+        searchButton = driver.find_element_by_xpath('/html/body/div[5]/div[1]/div[2]/div/form/div/input[4]')
+        searchButton.click()
 
-    searchButton = driver.find_element_by_xpath('/html/body/div[5]/div[1]/div[2]/div/form/div/input[4]')
-    searchButton.click()
+        resultUrl = driver.current_url
+        resultTitle = driver.find_element_by_xpath('/html/body/div[3]/h1').text
+        resultContent = re.sub(r'\[.*?\]', "", str(driver.find_element_by_xpath('/html/body/div[3]/div[3]/div[5]/div[1]/p[1]').text))
 
-    resultUrl = driver.current_url
-    resultTitle = driver.find_element_by_xpath('/html/body/div[3]/h1').text
-    resultContent = re.sub(r'\[.*?\]', "", str(driver.find_element_by_xpath('/html/body/div[3]/div[3]/div[5]/div[1]/p[1]').text))
+        driver.close()
 
-    driver.close()
+        return Result(resultUrl, resultTitle, resultContent)
 
-    return Result(resultUrl, resultTitle, resultContent)
+    except (NoSuchElementException) as error:
+        print(error)
+
+        return -1
+
+        driver.close()
+
